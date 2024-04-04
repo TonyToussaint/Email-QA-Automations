@@ -1,0 +1,82 @@
+from selenium import webdriver
+from selenium.webdriver.common.by import By
+from colorama import Fore, Style  # Importing for color highlighting of differences
+
+# Works but doesn't take in the model variable (Golf GTI) when doing the searching for the dynamic function. Must compare this code with the original text_comparisonTest code - Fixed
+# Also make sure there's consistency through everything - ie: check the text_ComparisonTest code and look at the differences you have in there exceptions
+
+# Similar to Dynamic copy function but for copy with no dynamic content. 
+def test_static_copy(static_body, static_body2):
+    try:
+        element = driver.find_element(By.XPATH, f"//*[contains(text(), '{static_body}')]")
+        if element.text == static_body2:
+            print("-------------------------------- Static Copy Test")
+            print("Selected copy element:\n", element.text)
+            print()
+            print("Matches copy deck:\n", static_body2)
+            print("--------------------------------\n")
+        else:
+            print("--------------------------------Static Copy Test")
+            print("The selected body copy in the email has a discrepancy with the copy deck:\n", element.text)
+            print()
+            print("The copy deck says:\n", static_body2)
+            highlight_differences(element.text, static_body2)
+            print("--------------------------------\n")
+    except Exception as e:
+        print("Error:", e)
+        print("The selected STATIC copy or element isn't present in the email\n")
+
+# Function used to compare body copy with dynamic content like car models. 
+def test_dynamic_copy(model, bodycopy_placeholder, bodycopy2):
+    bodycopy3 = bodycopy2.format(model) # Used to format the actual copy with {} being filled with the 'model' variable
+    try:
+        element = driver.find_element(By.XPATH, f"//*[contains(text(), '{bodycopy_placeholder}')]".format(model))
+        if element.text == bodycopy3:
+            print("-------------------------------- Dynamic Copy Test")
+            print("First body copy element: \n", element.text)
+            print()
+            print("Matches up with the copy deck: \n", bodycopy3)
+            print("--------------------------------")
+        else:
+            print("-------------------------------- Dynamic Copy Test")
+            print("The selected body copy in the email has a discrepancy with the copy deck:\n", element.text)
+            print()
+            print("The copy deck says:\n", bodycopy3)
+            print()
+            highlight_differences(element.text, bodycopy3)
+            print("--------------------------------")
+    except Exception as e:
+        print("Error:", e)
+        print("The selected copy or element isn't present in the email")
+
+# Function used to highlight the difference between the copy provided and the copy that's actually in the email
+def highlight_differences(text1, text2):
+    print("Differences in RED:")
+    for char1, char2 in zip(text1, text2):
+        if char1 != char2:
+            print(f"{Fore.RED}{char1}{Style.RESET_ALL}", end="")
+        else:
+            print(char1, end="")
+    if len(text1) != len(text2):
+        print(f"{Fore.RED}{text1[min(len(text1), len(text2)):]}{Style.RESET_ALL}", end="")
+    print()
+
+# Start a new browser session
+driver = webdriver.Chrome()
+driver.get("https://view.e.vwemails.ca/?qs=eff70a612a171a47540608dd701a675aae955cbb5001b556ed1c2381fe802118d075f83923f617fa83d1171be29c061326d8300852ca3b73c18116c6a31b9af5a15ad171e0e19c3ff89099d9e65a5585")
+
+# Testing static copy
+static_body = "Wunderbar! We’re thrillled to have you join the Volkswagen family."
+static_body2 = "Wunderbar! We’re thrilled to have you join the Volkswagen family. You’re now part of a special community of drivers."
+test_static_copy(static_body, static_body2)
+
+# Testing dynamic copy
+model = "Golf GTI"
+bodycopy_placeholder = "There’s a lot to enjoy with your new {}. Like its"
+bodycopy2 = "There’s a lot to enjoy with your new {}. Like its iconic German design, it’s fun-to-drive performance – and let’s not forget that new VW smell." # The model isn't being pulled in
+test_dynamic_copy(model, bodycopy_placeholder, bodycopy2)
+
+# Close the browser session
+driver.quit()
+
+print('Job completed!')

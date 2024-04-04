@@ -1,0 +1,128 @@
+# import webdriver and time ( for sleep )
+from selenium import webdriver
+from time import sleep 
+from colorama import Fore, Style # Importing for color highlighting of differences
+
+# import by (wtf lmao?)
+from selenium.webdriver.common.by import By
+
+# create webdriver object
+driver = webdriver.Chrome()
+ 
+# Go to email website -> Using View In Browser Link
+driver.get("https://view.e.vwemails.ca/?qs=eff70a612a171a47540608dd701a675aae955cbb5001b556ed1c2381fe802118d075f83923f617fa83d1171be29c061326d8300852ca3b73c18116c6a31b9af5a15ad171e0e19c3ff89099d9e65a5585")
+
+sleep(5)
+# --- Testing Static copy ----------------------------- 
+# --- note: Because of the ending code in some text like " and let's not forget that new VW&nbsp;smell.", I've used a partial version of the copy to find the element,
+# --- and a second variable with the actual copy deck content for comparison
+staticBody = "Wunderbar! We’re thrillled to have you join the Volkswagen family." # Used for find_element
+staticBody2 = "Wunderbar! We’re thrilled to have you join the Volkswagen family. You’re now part of a special community of drivers." # Used for actual comparisons
+
+try:
+    # Attempt to find body copy using the view in browser
+
+    element2 = driver.find_element(By.XPATH, f"//*[contains(text(), '{staticBody}')]")
+
+
+    # Testing if the found body copy matches up with the copy deck's body copy
+    if element2.text == staticBody2:
+        print("First body copy element: ", element2.text)
+        print("")
+        print("Matches copy deck: ", staticBody2)
+        print("")
+    else:
+        print("The selected body copy in the email has a discepency with copy deck: ", element2.text)
+        print("")
+        print("The copy deck says: ", staticBody2)
+        print()
+        # Highlight the differences character by character
+        print("Differences in RED:")
+        for i in range(min(len(element2.text), len(staticBody2))):
+            if element2.text[i] != staticBody2[i]:
+                print(f"{Fore.RED}{element2.text[i]}{Style.RESET_ALL}", end="")
+            else:
+                print(element2.text[i], end="")
+        if len(element2.text) != len(staticBody2):
+            print(f"{Fore.RED}{element2.text[min(len(element2.text), len(staticBody2)):]}{Style.RESET_ALL}", end="")
+        
+        print("\n")
+except:
+    print("Error: The copy has blatant discrepency or is just not found in the email at all. \nCopy: ", staticBody)   
+
+
+# --- End of static copy test --------------------------
+    
+
+# --- Testing placeholder method for dynamic models ----------------------------
+# Define the model name
+model = "Golf GTI"
+
+# Define the body copy with the placeholder
+bodycopy_placeholder = "There’s a lot to enjoy with your new {}. Like its"
+bodycopy = bodycopy_placeholder.format(model)
+
+# Bodycopy from copy deck 
+bodycopy2_placeholder = "There’s a lot to enjoy with your new {}. Like its iconic German design, it’s fun-to-drive performance – and let’s not forget that new VW smell."
+bodycopy2 = bodycopy2_placeholder.format(model) 
+
+try:
+    # Attempt to find body copy using the view in browser
+    element3 = driver.find_element(By.XPATH, f"//*[contains(text(), '{bodycopy_placeholder}')]".format(model))
+
+    # Testing if the found body copy matches up with the copy deck's body copy
+    if element3.text == bodycopy2:
+        print("First body copy element: ", element3.text)
+        print("")
+        print("Matches up with the copy deck: ", bodycopy2)
+        print("")
+    else:
+        print("The selected body copy in the email has a discepency with copy deck: ", element3.text)
+        print("")
+        print("The copy deck says: ", bodycopy2)
+        print()
+        # Highlight the differences character by character
+        print("Differences in RED:")
+        for i in range(min(len(element3.text), len(bodycopy2))):
+            if element3.text[i] != bodycopy2[i]:
+                print(f"{Fore.RED}{element3.text[i]}{Style.RESET_ALL}", end="")
+            else:
+                print(element3.text[i], end="")
+        if len(element3.text) != len(bodycopy2):
+            print(f"{Fore.RED}{element3.text[min(len(element3.text), len(bodycopy2)):]}{Style.RESET_ALL}", end="")
+        
+        print("\n")
+except Exception as e:
+    print("Error:", e)   
+
+
+# ------------------------------------------------
+print('Job completed!')
+ 
+
+
+
+
+
+
+'''from selenium import webdriver
+
+# Initialize Selenium WebDriver (choose appropriate browser driver)
+driver = webdriver.Chrome()
+
+# Open the email in a webmail interface (replace URL with actual URL)
+driver.get("https://your-webmail.com/inbox")
+
+# Find and click all links in the email
+links = driver.find_elements_by_tag_name("a")
+for link in links:
+    # Click the link
+    link.click()
+    
+    # Verify the URL of the current page (or handle redirection if needed)
+    current_url = driver.current_url
+    expected_url = link.get_attribute("href")
+    assert current_url == expected_url, f"Link {link.text} does not navigate to the expected URL: {expected_url}"
+
+# Close the browser
+driver.quit() '''

@@ -1,0 +1,101 @@
+from selenium import webdriver
+from selenium.webdriver.common.by import By
+from colorama import Fore, Style
+
+class EmailAutomation:
+    def __init__(self, driver):
+        self.driver = driver
+    
+    def open_email(self, url):
+        self.driver.get(url)
+    
+    def close_email(self):
+        self.driver.quit()
+    
+    def test_static_copy(self, static_body_from_email, static_body_from_copy_deck):
+        try:
+            element = self.driver.find_element(By.XPATH, f"//*[contains(text(), '{static_body_from_email}')]")
+            if element.text == static_body_from_copy_deck:
+                print("-------------------------------- Static Copy Test")
+                print("Selected copy element:\n", element.text)
+                print()
+                print("Matches copy deck:\n", static_body_from_copy_deck)
+                print("-------------------------------- End Static Copy Test\n")
+            else:
+                print("--------------------------------Static Copy Test")
+                print("The selected body copy in the email has a discrepancy with the copy deck:\n", element.text)
+                print()
+                print("The copy deck says:\n", static_body_from_copy_deck)
+                self.highlight_differences(element.text, static_body_from_copy_deck)
+                print("-------------------------------- End Static Copy Test\n")
+        except Exception as e:
+            print("Error:", e)
+            print("The selected STATIC copy or element isn't present in the email\n") 
+
+    def test_dynamic_copy(self, model, bodycopy_placeholder_from_copy_deck, bodycopy_from_copy_deck):
+        bodycopy = bodycopy_from_copy_deck.format(model) 
+        try:
+            element = self.driver.find_element(By.XPATH, f"//*[contains(text(), '{bodycopy_placeholder_from_copy_deck}')]")
+            if element.text == bodycopy:
+                print("-------------------------------- Dynamic Copy Test")
+                print("First body copy element: \n", element.text)
+                print()
+                print("Matches up with the copy deck: \n", bodycopy)
+                print("-------------------------------- End Dynamic Copy Test")
+            else:
+                print("-------------------------------- Dynamic Copy Test")
+                print("The selected body copy in the email has a discrepancy with the copy deck:\n", element.text)
+                print()
+                print("The copy deck says:\n", bodycopy)
+                print()
+                self.highlight_differences(element.text, bodycopy)
+                print("-------------------------------- End Dynamic Copy Test")
+        except Exception as e:
+            print("Error:", e)
+            print("The selected DYNAMIC copy or element isn't present in the email")
+            print(bodycopy)
+
+    def highlight_differences(self, text1, text2):
+        print("Differences in RED:")
+        for char1, char2 in zip(text1, text2):
+            if char1 != char2:
+                print(f"{Fore.RED}{char1}{Style.RESET_ALL}", end="")
+            else:
+                print(char1, end="")
+        if len(text1) != len(text2):
+            print(f"{Fore.RED}{text1[min(len(text1), len(text2)):]}{Style.RESET_ALL}", end="")
+        print()
+
+# Start a new browser session
+driver = webdriver.Chrome()
+
+while True:
+    # Instantiate the EmailAutomation class
+    email_automation = EmailAutomation(driver)
+    email_automation.open_email("https://view.e.vwemails.ca/?qs=eff70a612a171a47540608dd701a675aae955cbb5001b556ed1c2381fe802118d075f83923f617fa83d1171be29c061326d8300852ca3b73c18116c6a31b9af5a15ad171e0e19c3ff89099d9e65a5585")
+
+    # Ask user for copy type
+    copy_type = input("Is the copy static or dynamic? (Enter 'static' or 'dynamic'): ").lower()
+
+    if copy_type == "static":
+        static_body_from_email = input("Enter the static body text from the email: ")
+        static_body_from_copy_deck = input("Enter the static body text from the copy deck: ")
+        email_automation.test_static_copy(static_body_from_email, static_body_from_copy_deck)
+    elif copy_type == "dynamic":
+        model = input("Enter the dynamic content (e.g., model): ")
+        bodycopy_placeholder_from_copy_deck = input("Enter the body copy placeholder from the copy deck: ")
+        bodycopy_from_copy_deck = input("Enter the body copy text from the copy deck: ")
+        email_automation.test_dynamic_copy(model, bodycopy_placeholder_from_copy_deck, bodycopy_from_copy_deck)
+    else:
+        print("Invalid input. Please enter 'static' or 'dynamic'.")
+
+    #email_automation.close_email()
+
+    # Ask if the user wants to continue or exit
+    choice = input("Do you want to continue? (yes/no): ").lower()
+    if choice != "yes":
+        break
+
+# Close the browser session
+driver.quit()
+print('Job completed!')

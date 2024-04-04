@@ -1,0 +1,112 @@
+from selenium import webdriver
+from selenium.webdriver.common.by import By
+from colorama import Fore, Style
+from rapidfuzz import fuzz
+
+# Note: Has trouble finding stuff in the footer of the e-mails
+
+class EmailAutomation:
+    def __init__(self, driver):
+        self.driver = driver
+    
+    def open_email(self, url):
+        self.driver.get(url)
+    
+    def close_email(self):
+        self.driver.quit()
+    # - testing fuzzy matching
+    def test_static_copy(self, static_body_from_email, static_body_from_copy_deck):
+        try:
+            element = self.driver.find_element(By.XPATH, f"//*[contains(text(), '{static_body_from_email}')]")
+            # Using fuzz ratio for fuzzy matching
+            match_score = fuzz.ratio(element.text, static_body_from_copy_deck)
+            
+            if match_score == 100:  # Assuming 80 as a threshold for a match
+                print("-------------------------------- Static Copy Test")
+                print("The element's tag is: ", element.tag_name)
+                print("Selected copy element:\n", element.text)
+                print()
+                print("Has a high similarity with copy deck (score:", match_score, "):\n", static_body_from_copy_deck)
+                print("-------------------------------- End Static Copy Test\n")
+            elif match_score < 100:
+                print("-------------------------------- Static Copy Test")
+                print("The selected body copy in the email has some differences from the copy deck (score:", match_score, "):\n", element.text)
+                print()
+                print("The copy deck says:\n", static_body_from_copy_deck)
+                print()
+                self.highlight_differences(static_body_from_copy_deck, element.text)
+                print("-------------------------------- End Static Copy Test\n")
+        except Exception as e:
+            print("The selected STATIC copy or element isn't present in the email\n")
+    # - End of testing fuzzy matching on static copy 
+    def test_dynamic_copy(self, model, bodycopy_placeholder_from_copy_deck, bodycopy_from_copy_deck):
+        bodycopy_placeholder_from_copy_deck = bodycopy_placeholder_from_copy_deck.replace("[Model]", model)
+        bodycopy_from_copy_deck = bodycopy_from_copy_deck.replace("[Model]", model)
+        
+        try:
+            element = self.driver.find_element(By.XPATH, f"//*[contains(text(), '{bodycopy_placeholder_from_copy_deck}')]")
+            if element.text == bodycopy_from_copy_deck:
+                print("-------------------------------- Dynamic Copy Test")
+                print("First body copy element: \n", element.text)
+                print()
+                print("Matches up with the copy deck: \n", bodycopy_from_copy_deck)
+                print("-------------------------------- End Dynamic Copy Test")
+            else:
+                print("-------------------------------- Dynamic Copy Test")
+                print("The selected body copy in the email has a discrepancy with the copy deck:\n", element.text)
+                print()
+                print("The copy deck says:\n", bodycopy_from_copy_deck)
+                print()
+                self.highlight_differences(element.text, bodycopy_from_copy_deck)
+                print("-------------------------------- End Dynamic Copy Test")
+        except Exception as e:
+            print("Error:", e)
+            print("The selected DYNAMIC copy or element isn't present in the email") 
+            print("PlaceHolder: \n", bodycopy_placeholder_from_copy_deck)
+            print("Actual Copy: \n", bodycopy_from_copy_deck)
+
+    def highlight_differences(self, text1, text2):
+        print("Differences in RED:")
+        for char1, char2 in zip(text1, text2):
+            if char1 != char2:
+                print(f"{Fore.RED}{char1}{Style.RESET_ALL}", end="")
+            else:
+                print(char1, end="")
+        if len(text1) != len(text2):
+            print(f"{Fore.RED}{text1[min(len(text1), len(text2)):]}{Style.RESET_ALL}", end="")
+        print()
+
+# Start a new browser session
+driver = webdriver.Chrome()
+driver.get("https://view.e.vwemails.ca/?qs=eff70a612a171a47540608dd701a675aae955cbb5001b556ed1c2381fe802118d075f83923f617fa83d1171be29c061326d8300852ca3b73c18116c6a31b9af5a15ad171e0e19c3ff89099d9e65a5585")
+
+while True:
+    # Instantiate the EmailAutomation class
+    email_automation = EmailAutomation(driver)
+    
+    # Ask user for input
+    copy_type = input("Enter the type of copy (static/dynamic): ").lower()
+    if copy_type not in ["static", "dynamic"]:
+        print("Invalid input! Please enter 'static' or 'dynamic'.")
+        continue
+    
+    # Get copy from the user
+    if copy_type == "static":
+        static_body_from_email = input("Enter static body from email: ")
+        static_body_from_copy_deck = input("Enter static body from copy deck: ")
+        email_automation.test_static_copy(static_body_from_email, static_body_from_copy_deck)
+    else:
+        model = input("Enter the model: ")
+        bodycopy_placeholder_from_copy_deck = input("Enter dynamic body placeholder from copy deck: ")
+        bodycopy_from_copy_deck = input("Enter dynamic body from copy deck: ")
+        email_automation.test_dynamic_copy(model, bodycopy_placeholder_from_copy_deck, bodycopy_from_copy_deck)
+    
+    # Ask if user wants to continue
+    choice = input("Do you want to perform another comparison? (yes/no): ").lower()
+    if choice != "yes":
+        break
+
+# Close the browser session
+driver.quit()
+
+print('Job completed!')

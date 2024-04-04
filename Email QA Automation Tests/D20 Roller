@@ -1,0 +1,17 @@
+import random
+
+def roll_d20():
+    return random.randint(1, 20)
+
+def main():
+    rolls = 0
+    while True:
+        rolls += 1
+        result = roll_d20()
+        print(f"Roll {rolls}: {result}")
+        if result == 20:
+            print(f"Natural 20 achieved after {rolls} rolls!")
+            break
+
+if __name__ == "__main__":
+    main()
